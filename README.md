@@ -1,19 +1,19 @@
-# @yourgithubusername/pie-chart
+# @hamshad/pie-chart
 
 A beautiful, animated pie chart component with rounded corners for React.
 
 ## Installation
 
 ```bash
-npm install @yourgithubusername/pie-chart
+npm install @hamshad/pie-chart
 # or
-yarn add @yourgithubusername/pie-chart
+yarn add @hamshad/pie-chart
 ```
 
 ## Usage
 
 ```tsx
-import { RoundedPieChart } from '@yourgithubusername/pie-chart';
+import { RoundedPieChart } from '@hamshad/pie-chart';
 
 const data = [
   { value: 2.5, label: '+2.5%', color: '#E8D89C' },
