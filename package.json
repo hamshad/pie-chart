@@ -1,6 +1,6 @@
 {
   "name": "@hamshad/pie-chart",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A beautiful, animated pie chart component with rounded corners for React",
   "type": "module",
   "publishConfig": {
@@ -32,14 +32,14 @@
   "author": "Hamshad",
   "license": "MIT",
   "peerDependencies": {
-    "react": ">=16.8.0",
-    "react-dom": ">=16.8.0"
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.0",
     "@rollup/plugin-node-resolve": "^15.0.0",
     "@rollup/plugin-typescript": "^11.0.0",
-    "@types/react": "^18.0.0",
+    "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^4.0.0",
     "rollup": "^3.0.0",
