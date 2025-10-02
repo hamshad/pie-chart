@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import { jsxs, jsx } from 'react/jsx-runtime';
+import { useState, useEffect } from 'react';
 
 const RoundedPieChart = ({ data, size = 300, innerRadiusRatio = 0.6875, cornerRadius = 8, gap = 3, hoverOffset = 5, animationDuration = 600, className = '', showLabelsOnHover = true, labelDistance = 30, }) => {
     const [mounted, setMounted] = useState(false);
@@ -62,32 +63,24 @@ const RoundedPieChart = ({ data, size = 300, innerRadiusRatio = 0.6875, cornerRa
             dotPos,
             index });
     });
-    return (React.createElement("svg", { width: size, height: size, viewBox: `0 0 ${size} ${size}`, className: className },
-        React.createElement("defs", null,
-            React.createElement("filter", { id: "shadow", x: "-50%", y: "-50%", width: "200%", height: "200%" },
-                React.createElement("feDropShadow", { dx: "0", dy: "2", stdDeviation: "3", floodOpacity: "0.2" }))),
-        segments.map((segment) => (React.createElement("g", { key: segment.index },
-            React.createElement("path", { d: segment.path, fill: segment.color, style: {
-                    transition: `all ${animationDuration}ms cubic-bezier(0.4, 0, 0.2, 1)`,
-                    filter: hoveredIndex === segment.index ? 'url(#shadow)' : 'none',
-                    cursor: 'pointer',
-                }, onMouseEnter: () => setHoveredIndex(segment.index), onMouseLeave: () => setHoveredIndex(null) }),
-            showLabelsOnHover && (React.createElement("g", { style: {
-                    opacity: hoveredIndex === segment.index ? 1 : 0,
-                    transition: 'opacity 0.3s ease',
-                    transform: hoveredIndex === segment.index ? 'scale(1.1)' : 'scale(1)',
-                    transformOrigin: `${segment.labelPos.x}px ${segment.labelPos.y}px`,
-                    pointerEvents: 'none',
-                } },
-                React.createElement("text", { x: segment.labelPos.x, y: segment.labelPos.y, textAnchor: "middle", dominantBaseline: "middle", style: {
-                        fontSize: hoveredIndex === segment.index ? '16px' : '14px',
-                        fontWeight: hoveredIndex === segment.index ? '600' : '500',
-                        fill: '#374151',
-                        transition: 'all 0.3s ease',
-                    } }, segment.label),
-                React.createElement("line", { x1: segment.dotPos.x, y1: segment.dotPos.y, x2: segment.labelPos.x, y2: segment.labelPos.y - 5, stroke: "#9CA3AF", strokeWidth: "1", style: {
-                        transition: `all ${animationDuration}ms cubic-bezier(0.4, 0, 0.2, 1)`,
-                    } }))))))));
+    return (jsxs("svg", { width: size, height: size, viewBox: `0 0 ${size} ${size}`, className: className, children: [jsx("defs", { children: jsx("filter", { id: "shadow", x: "-50%", y: "-50%", width: "200%", height: "200%", children: jsx("feDropShadow", { dx: "0", dy: "2", stdDeviation: "3", floodOpacity: "0.2" }) }) }), segments.map((segment) => (jsxs("g", { children: [jsx("path", { d: segment.path, fill: segment.color, style: {
+                            transition: `all ${animationDuration}ms cubic-bezier(0.4, 0, 0.2, 1)`,
+                            filter: hoveredIndex === segment.index ? 'url(#shadow)' : 'none',
+                            cursor: 'pointer',
+                        }, onMouseEnter: () => setHoveredIndex(segment.index), onMouseLeave: () => setHoveredIndex(null) }), showLabelsOnHover && (jsxs("g", { style: {
+                            opacity: hoveredIndex === segment.index ? 1 : 0,
+                            transition: 'opacity 0.3s ease',
+                            transform: hoveredIndex === segment.index ? 'scale(1.1)' : 'scale(1)',
+                            transformOrigin: `${segment.labelPos.x}px ${segment.labelPos.y}px`,
+                            pointerEvents: 'none',
+                        }, children: [jsx("text", { x: segment.labelPos.x, y: segment.labelPos.y, textAnchor: "middle", dominantBaseline: "middle", style: {
+                                    fontSize: hoveredIndex === segment.index ? '16px' : '14px',
+                                    fontWeight: hoveredIndex === segment.index ? '600' : '500',
+                                    fill: '#374151',
+                                    transition: 'all 0.3s ease',
+                                }, children: segment.label }), jsx("line", { x1: segment.dotPos.x, y1: segment.dotPos.y, x2: segment.labelPos.x, y2: segment.labelPos.y - 5, stroke: "#9CA3AF", strokeWidth: "1", style: {
+                                    transition: `all ${animationDuration}ms cubic-bezier(0.4, 0, 0.2, 1)`,
+                                } })] }))] }, segment.index)))] }));
 };
 
 export { RoundedPieChart };

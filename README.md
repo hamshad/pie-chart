@@ -68,3 +68,32 @@ interface PieChartSegment {
 ## License
 
 MIT
+
+## Development with Vite
+
+To run the example locally with Vite (fast dev server):
+
+1. Install dev dependencies:
+
+```bash
+npm install
+```
+
+2. Start the Vite dev server and open http://localhost:5173/example/index.html
+
+```bash
+npm run dev
+```
+
+To build the example for preview:
+
+```bash
+npm run build:example
+```
+
+If you want to keep using Rollup to build the library for publishing, use:
+
+```bash
+npm run build:lib
+```
+

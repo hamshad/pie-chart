@@ -3,7 +3,7 @@
     "target": "ES2015",
     "module": "ESNext",
     "lib": ["ES2015", "DOM"],
-    "jsx": "react",
+  "jsx": "react-jsx",
     "declaration": true,
     "declarationMap": true,
     "outDir": "./dist",
@@ -13,6 +13,6 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src"],
+  "include": ["src", "example"],
   "exclude": ["node_modules", "dist"]
 }
