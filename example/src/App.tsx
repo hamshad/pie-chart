@@ -25,7 +25,7 @@ const data = [
 ];
 
 export default function App() {
-  const [number, setNumber] = React.useState(0);
+  const [number, setNumber] = React.useState(4);
 
   return (
     <div style={{ padding: 20 }}>
