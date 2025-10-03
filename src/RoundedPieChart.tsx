@@ -16,7 +16,6 @@ export interface RoundedPieChartProps {
   animationDuration?: number;
   className?: string;
   showLabelsOnHover?: boolean;
-  labelDistance?: number;
 }
 
 export const RoundedPieChart: React.FC<RoundedPieChartProps> = ({
@@ -29,7 +28,6 @@ export const RoundedPieChart: React.FC<RoundedPieChartProps> = ({
   animationDuration = 1000,
   className = '',
   showLabelsOnHover = true,
-  labelDistance = 30,
 }) => {
   const [animationProgress, setAnimationProgress] = useState(0);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
@@ -111,12 +109,6 @@ export const RoundedPieChart: React.FC<RoundedPieChartProps> = ({
     ].join(' ');
   };
 
-  const getLabelPosition = (startAngle: number, endAngle: number, extraRadius: number = 0) => {
-    const midAngle = (startAngle + endAngle) / 2;
-    const labelRadius = radius + labelDistance + extraRadius;
-    return polarToCartesian(centerX, centerY, labelRadius, midAngle);
-  };
-
   const getMidDirection = (startAngle: number, endAngle: number) => {
     const midAngle = (startAngle + endAngle) / 2;
     const angleInRadians = ((midAngle - 90) * Math.PI) / 180.0;
@@ -159,21 +151,54 @@ export const RoundedPieChart: React.FC<RoundedPieChartProps> = ({
     );
 
     const extraRadius = isHovered ? hoverOffset : 0;
-    const labelPos = getLabelPosition(startAngle, endAngle, extraRadius);
     const dotPos = polarToCartesian(centerX, centerY, radius + extraRadius, (startAngle + endAngle) / 2);
+
+    // Calculate L-shaped line positions
+    const horizontalLineLength = 25;
+    const verticalLineLength = 20;
+
+    // Start point at the edge of the segment
+    const lineStartX = dotPos.x + (isHovered ? tx : 0);
+    const lineStartY = dotPos.y + (isHovered ? ty : 0);
+
+    // Determine if segment is in bottom half (angle between 90 and 270 degrees)
+    const midAngle = (startAngle + endAngle) / 2;
+    const normalizedAngle = midAngle % 360;
+    const isBottomHalf = normalizedAngle > 90 && normalizedAngle < 270;
+
+    // Horizontal line extends outward
+    const horizontalEndX = lineStartX + midDir.dx * horizontalLineLength;
+    const horizontalEndY = lineStartY + midDir.dy * horizontalLineLength;
+
+    // Vertical line direction based on position
+    const verticalDirection = isBottomHalf ? 1 : -1;
+    const verticalEndX = horizontalEndX;
+    const verticalEndY = horizontalEndY + (verticalLineLength * verticalDirection);
+
+    // Text position
+    const textOffset = isBottomHalf ? 8 : -8;
+    const textX = verticalEndX;
+    const textY = verticalEndY + textOffset;
 
     return {
       ...item,
       path,
       startAngle,
       endAngle,
-      labelPos,
-      dotPos,
+      lineStartX,
+      lineStartY,
+      horizontalEndX,
+      horizontalEndY,
+      verticalEndX,
+      verticalEndY,
+      textX,
+      textY,
       tx,
       ty,
       index,
       animatedAngle,
       segProgress,
+      isBottomHalf,
     };
   });
 
@@ -183,6 +208,7 @@ export const RoundedPieChart: React.FC<RoundedPieChartProps> = ({
       height={size}
       viewBox={`0 0 ${size} ${size}`}
       className={className}
+      style={{ overflow: 'visible' }}
     >
       <defs>
         <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
@@ -228,34 +254,34 @@ export const RoundedPieChart: React.FC<RoundedPieChartProps> = ({
                 style={{
                   opacity: isHovered ? 1 : 0,
                   transition: 'opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
-                  transform: isHovered ? 'scale(1.05)' : 'scale(1)',
-                  transformOrigin: `${segment.labelPos.x}px ${segment.labelPos.y}px`,
                   pointerEvents: 'none',
                 }}
               >
+                {/* L-shaped line */}
+                <path
+                  d={`M ${segment.lineStartX} ${segment.lineStartY} L ${segment.horizontalEndX} ${segment.horizontalEndY} L ${segment.verticalEndX} ${segment.verticalEndY}`}
+                  stroke={segment.color}
+                  strokeWidth="3"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+
+                {/* Percentage text */}
                 <text
-                  x={segment.labelPos.x}
-                  y={segment.labelPos.y}
+                  x={segment.textX}
+                  y={segment.textY}
                   textAnchor="middle"
                   dominantBaseline="middle"
                   style={{
-                    fontSize: isHovered ? '16px' : '14px',
-                    fontWeight: isHovered ? '600' : '500',
-                    fill: '#374151',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    fill: '#4B5563',
                     transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
                   }}
                 >
-                  {segment.label}
+                  {`${(segment.value / total * 100).toFixed(1).replace('.', ',')}%`}
                 </text>
-
-                <line
-                  x1={segment.dotPos.x + (isHovered ? segment.tx : 0)}
-                  y1={segment.dotPos.y + (isHovered ? segment.ty : 0)}
-                  x2={segment.labelPos.x}
-                  y2={segment.labelPos.y - 5}
-                  stroke="#9CA3AF"
-                  strokeWidth="1"
-                />
               </g>
             )}
           </g>
