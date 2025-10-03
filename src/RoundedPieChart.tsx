@@ -197,23 +197,29 @@ export const RoundedPieChart: React.FC<RoundedPieChartProps> = ({
         const isHovered = hoveredIndex === segment.index;
         return (
           <g key={segment.index}>
+            <path
+              d={segment.path}
+              fill="transparent"
+              stroke="none"
+              style={{ cursor: 'pointer' }}
+              onMouseEnter={() => setHoveredIndex(segment.index)}
+              onMouseLeave={() => setHoveredIndex(null)}
+            />
             <g
               style={{
                 transform: `translate(${segment.tx}px, ${segment.ty}px) scale(${isHovered ? 1.05 : 1})`,
                 transformOrigin: `${centerX}px ${centerY}px`,
                 transition: 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), filter 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+                pointerEvents: 'none',
               }}
             >
               <path
                 d={segment.path}
                 fill={segment.color}
                 style={{
-                  cursor: 'pointer',
                   filter: isHovered ? 'url(#shadow)' : 'none',
                   opacity: segment.segProgress,
                 }}
-                onMouseEnter={() => setHoveredIndex(segment.index)}
-                onMouseLeave={() => setHoveredIndex(null)}
               />
             </g>
 
