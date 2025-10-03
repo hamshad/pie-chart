@@ -26,17 +26,31 @@ export const RoundedPieChart: React.FC<RoundedPieChartProps> = ({
   cornerRadius = 8,
   gap = 3,
   hoverOffset = 5,
-  animationDuration = 600,
+  animationDuration = 1000,
   className = '',
   showLabelsOnHover = true,
   labelDistance = 30,
 }) => {
-  const [mounted, setMounted] = useState(false);
+  const [animationProgress, setAnimationProgress] = useState(0);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    const startTime = Date.now();
+
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / animationDuration, 1);
+      // Ease out cubic for overall smoother animation
+      const easedProgress = 1 - Math.pow(1 - progress, 3);
+      setAnimationProgress(easedProgress);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }, [animationDuration]);
 
   const total = data.reduce((sum, item) => sum + Math.abs(item.value), 0);
   const radius = (size * 0.8) / 2;
@@ -44,13 +58,26 @@ export const RoundedPieChart: React.FC<RoundedPieChartProps> = ({
   const centerX = size / 2;
   const centerY = size / 2;
 
+  // Precompute segment durations and start times
+  const segmentDurs = data.map(item => (Math.abs(item.value) / total) * animationDuration);
+  const startTimes = [0];
+  let cumul = 0;
+  for (let i = 1; i < data.length; i++) {
+    cumul += 0.25 * segmentDurs[i - 1];
+    startTimes.push(cumul);
+  }
+  const chainedTotal = startTimes[startTimes.length - 1] + segmentDurs[segmentDurs.length - 1];
+  const scaleFactor = chainedTotal > 0 ? animationDuration / chainedTotal : 1;
+  const scaledSegmentDurs = segmentDurs.map(d => d * scaleFactor);
+  const scaledStartTimes = startTimes.map(s => s * scaleFactor);
+
   const polarToCartesian = (
     centerX: number,
     centerY: number,
     radius: number,
     angleInDegrees: number
   ) => {
-    const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
+    const angleInRadians = ((angleInDegrees - 90) * Math.PI) / 180.0;
     return {
       x: centerX + radius * Math.cos(angleInRadians),
       y: centerY + radius * Math.sin(angleInRadians),
@@ -84,37 +111,56 @@ export const RoundedPieChart: React.FC<RoundedPieChartProps> = ({
     ].join(' ');
   };
 
-  const getLabelPosition = (startAngle: number, endAngle: number) => {
+  const getLabelPosition = (startAngle: number, endAngle: number, extraRadius: number = 0) => {
     const midAngle = (startAngle + endAngle) / 2;
-    const labelRadius = radius + labelDistance;
+    const labelRadius = radius + labelDistance + extraRadius;
     return polarToCartesian(centerX, centerY, labelRadius, midAngle);
+  };
+
+  const getMidDirection = (startAngle: number, endAngle: number) => {
+    const midAngle = (startAngle + endAngle) / 2;
+    const angleInRadians = ((midAngle - 90) * Math.PI) / 180.0;
+    return {
+      dx: Math.cos(angleInRadians),
+      dy: Math.sin(angleInRadians),
+    };
   };
 
   let currentAngle = 0;
   const segments = data.map((item, index) => {
     const percentage = Math.abs(item.value) / total;
-    const angle = percentage * 360;
+    const targetAngle = percentage * 360;
+    const segStartTime = scaledStartTimes[index];
+    const segDur = scaledSegmentDurs[index];
+    const segStartProgress = segStartTime / animationDuration;
+    let rawSegProgress = 0;
+    if (animationProgress >= segStartProgress) {
+      rawSegProgress = Math.min(1, (animationProgress - segStartProgress) / (segDur / animationDuration));
+    }
+    // Apply ease-out cubic per segment for smoother animation, higher power for faster start
+    const segProgress = 1 - Math.pow(1 - rawSegProgress, 4);
+    const animatedAngle = targetAngle * segProgress;
     const startAngle = currentAngle;
-    const endAngle = currentAngle + angle;
+    const endAngle = currentAngle + animatedAngle;
     const isHovered = hoveredIndex === index;
 
-    currentAngle = endAngle;
+    const midDir = getMidDirection(startAngle, endAngle);
+    const tx = isHovered ? hoverOffset * midDir.dx : 0;
+    const ty = isHovered ? hoverOffset * midDir.dy : 0;
 
-    const displayAngle = mounted ? angle : 0;
-    const displayEndAngle = startAngle + displayAngle;
+    currentAngle += targetAngle;
 
     const path = createRoundedArcPath(
       startAngle,
-      displayEndAngle,
-      isHovered ? radius + hoverOffset : radius,
+      endAngle,
+      radius,
       innerRadius,
       cornerRadius
     );
 
-    const labelPos = getLabelPosition(startAngle, endAngle);
-    const midAngle = (startAngle + endAngle) / 2;
-    const dotRadius = isHovered ? radius + hoverOffset : radius;
-    const dotPos = polarToCartesian(centerX, centerY, dotRadius, midAngle);
+    const extraRadius = isHovered ? hoverOffset : 0;
+    const labelPos = getLabelPosition(startAngle, endAngle, extraRadius);
+    const dotPos = polarToCartesian(centerX, centerY, radius + extraRadius, (startAngle + endAngle) / 2);
 
     return {
       ...item,
@@ -123,7 +169,11 @@ export const RoundedPieChart: React.FC<RoundedPieChartProps> = ({
       endAngle,
       labelPos,
       dotPos,
+      tx,
+      ty,
       index,
+      animatedAngle,
+      segProgress,
     };
   });
 
@@ -140,61 +190,71 @@ export const RoundedPieChart: React.FC<RoundedPieChartProps> = ({
         </filter>
       </defs>
 
-      {segments.map((segment) => (
-        <g key={segment.index}>
-          <path
-            d={segment.path}
-            fill={segment.color}
-            style={{
-              transition: `all ${animationDuration}ms cubic-bezier(0.4, 0, 0.2, 1)`,
-              filter: hoveredIndex === segment.index ? 'url(#shadow)' : 'none',
-              cursor: 'pointer',
-            }}
-            onMouseEnter={() => setHoveredIndex(segment.index)}
-            onMouseLeave={() => setHoveredIndex(null)}
-          />
-
-          {showLabelsOnHover && (
+      {segments.map((segment) => {
+        if (segment.animatedAngle <= 0.1) {
+          return null; // Don't render if not started animating
+        }
+        const isHovered = hoveredIndex === segment.index;
+        return (
+          <g key={segment.index}>
             <g
               style={{
-                opacity: hoveredIndex === segment.index ? 1 : 0,
-                transition: 'opacity 0.3s ease',
-                transform:
-                  hoveredIndex === segment.index ? 'scale(1.1)' : 'scale(1)',
-                transformOrigin: `${segment.labelPos.x}px ${segment.labelPos.y}px`,
-                pointerEvents: 'none',
+                transform: `translate(${segment.tx}px, ${segment.ty}px) scale(${isHovered ? 1.05 : 1})`,
+                transformOrigin: `${centerX}px ${centerY}px`,
+                transition: 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), filter 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
               }}
             >
-              <text
-                x={segment.labelPos.x}
-                y={segment.labelPos.y}
-                textAnchor="middle"
-                dominantBaseline="middle"
+              <path
+                d={segment.path}
+                fill={segment.color}
                 style={{
-                  fontSize: hoveredIndex === segment.index ? '16px' : '14px',
-                  fontWeight: hoveredIndex === segment.index ? '600' : '500',
-                  fill: '#374151',
-                  transition: 'all 0.3s ease',
+                  cursor: 'pointer',
+                  filter: isHovered ? 'url(#shadow)' : 'none',
+                  opacity: segment.segProgress,
                 }}
-              >
-                {segment.label}
-              </text>
-
-              <line
-                x1={segment.dotPos.x}
-                y1={segment.dotPos.y}
-                x2={segment.labelPos.x}
-                y2={segment.labelPos.y - 5}
-                stroke="#9CA3AF"
-                strokeWidth="1"
-                style={{
-                  transition: `all ${animationDuration}ms cubic-bezier(0.4, 0, 0.2, 1)`,
-                }}
+                onMouseEnter={() => setHoveredIndex(segment.index)}
+                onMouseLeave={() => setHoveredIndex(null)}
               />
             </g>
-          )}
-        </g>
-      ))}
+
+            {showLabelsOnHover && (
+              <g
+                style={{
+                  opacity: isHovered ? 1 : 0,
+                  transition: 'opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+                  transform: isHovered ? 'scale(1.05)' : 'scale(1)',
+                  transformOrigin: `${segment.labelPos.x}px ${segment.labelPos.y}px`,
+                  pointerEvents: 'none',
+                }}
+              >
+                <text
+                  x={segment.labelPos.x}
+                  y={segment.labelPos.y}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  style={{
+                    fontSize: isHovered ? '16px' : '14px',
+                    fontWeight: isHovered ? '600' : '500',
+                    fill: '#374151',
+                    transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+                  }}
+                >
+                  {segment.label}
+                </text>
+
+                <line
+                  x1={segment.dotPos.x + (isHovered ? segment.tx : 0)}
+                  y1={segment.dotPos.y + (isHovered ? segment.ty : 0)}
+                  x2={segment.labelPos.x}
+                  y2={segment.labelPos.y - 5}
+                  stroke="#9CA3AF"
+                  strokeWidth="1"
+                />
+              </g>
+            )}
+          </g>
+        );
+      })}
     </svg>
   );
 };
