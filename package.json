@@ -50,6 +50,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/hamshad/pie-chart"
+    "url": "git+https://github.com/hamshad/pie-chart.git"
   }
 }
