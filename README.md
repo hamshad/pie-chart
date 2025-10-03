@@ -2,6 +2,15 @@
 
 A beautiful, animated pie chart component with rounded corners for React.
 
+## Demo
+
+Below are two short demos showing the chart animation and interaction.
+
+<p>
+  <img src="./pie-chart%281%29.gif" alt="Pie chart demo 1" width="360" />
+  <img src="./pie-chart%282%29.gif" alt="Pie chart demo 2" width="360" />
+</p>
+
 ## Installation
 
 ```bash
@@ -69,31 +78,8 @@ interface PieChartSegment {
 
 MIT
 
-## Development with Vite
+## Development
 
-To run the example locally with Vite (fast dev server):
-
-1. Install dev dependencies:
-
-```bash
-npm install
-```
-
-2. Start the Vite dev server and open http://localhost:5173/example/index.html
-
-```bash
-npm run dev
-```
-
-To build the example for preview:
-
-```bash
-npm run build:example
-```
-
-If you want to keep using Rollup to build the library for publishing, use:
-
-```bash
-npm run build:lib
-```
+Development instructions (running the example, builds, etc.) were moved to `DEV_README.md`.
+See [DEV_README.md](./DEV_README.md) for details and exact npm scripts.
 
