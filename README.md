@@ -74,6 +74,12 @@ interface PieChartSegment {
 - 🪶 Lightweight with no dependencies
 - 🔄 Rounded corners for modern design
 
+## Contributing
+
+Contributions are welcome! Please read the [Contributing Guide](./CONTRIBUTING.md) for setup, branch naming, commit style, and pull request guidelines.
+
+By participating you agree to follow the [Code of Conduct](./CODE_OF_CONDUCT.md). Security issues? Please see [SECURITY.md](./SECURITY.md) for private disclosure instructions.
+
 ## License
 
 MIT
