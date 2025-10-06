@@ -1,6 +1,6 @@
 {
   "name": "@hamshad/pie-chart",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A beautiful, animated pie chart component with rounded corners for React",
   "type": "module",
   "publishConfig": {
